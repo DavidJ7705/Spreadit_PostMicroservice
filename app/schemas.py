@@ -9,12 +9,19 @@ ContentStr = Annotated[str, StringConstraints(min_length=0, max_length=2000)]
 class Post(BaseModel):
     id: int
     post_title: TitleStr
-    description: ContentStr
+    content: ContentStr
+    user_id: int = Field(..., description="User ID is required")
 
 class AddPost(BaseModel):
     post_title: TitleStr
-    description: ContentStr
+    content: ContentStr
+    user_id: int = Field(..., description="User ID is required")
+
+class UserPosts(BaseModel):
+    post_title: TitleStr
+    content: ContentStr
+    user_id: int = Field(..., description="User ID is required")
 
 class UpdatePost(BaseModel):
     post_title: TitleStr
-    description: ContentStr
+    content: ContentStr
