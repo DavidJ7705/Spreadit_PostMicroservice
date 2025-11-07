@@ -3,13 +3,13 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Depends, HTTPException, status, Response
 from fastapi.middleware.cors import CORSMiddleware
 from app.database import engine
-from app.models import Base, PostDB
+from app.models import Base, PostDB, LikeDB
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, selectinload
 
 from .database import engine, SessionLocal
-from .schemas import Post, AddPost, UpdatePost, UserPosts
+from .schemas import Post, AddPost, UpdatePost, UserPosts, Like, AddLike
 
 #Replacing @app.on_event("startup")
 @asynccontextmanager
@@ -209,3 +209,20 @@ def delete_specific_post(module_id: str, id:int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found")
 
     return {"message": "Deleted Post"}
+
+
+#------------- Likes -------------#
+#using like table in db to get all likes
+@app.get("/api/get-all-likes", response_model=list[Like])
+def get_likes(db: Session = Depends(get_db)):
+    stmt = select(LikeDB).order_by(LikeDB.id)
+    return list(db.execute(stmt).scalars())
+
+#Add like to a post as a user
+@app.post("/api/add-like/{user_id}/{id}", response_model=Like, status_code=status.HTTP_201_CREATED)
+def like_post(payload: AddLike, db: Session = Depends(get_db)):
+    like = LikeDB(**payload.model_dump())
+    db.add(like)
+
+    commit_or_rollback(db, "Post could not be Liked")
+    return like
