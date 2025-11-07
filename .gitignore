@@ -2,4 +2,7 @@ __pycache__/
 .ipynb_checkpoints/
 *.pyc
 venv/
-
+.uvicorn.out
+.uvicorn.pid
+.pytest_cache
+.env.*
