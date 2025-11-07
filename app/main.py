@@ -109,8 +109,8 @@ def update_post(user_id: str, updated_post: UpdatePost, db: Session = Depends(ge
     return {"message": "Post updated successful"}
 
 #update specific post by post id & user id
-@app.put("/api/update-specific-post/{user_id}/{id}", status_code=status.HTTP_200_OK)
-def update_specific_post(user_id: str, id:int, updated_post: UpdatePost, db: Session = Depends(get_db)):
+@app.put("/api/update-specific-post/user/{user_id}/{id}", status_code=status.HTTP_200_OK)
+def update_specific_user_post(user_id: str, id:int, updated_post: UpdatePost, db: Session = Depends(get_db)):
     post = db.query(PostDB).filter(
         PostDB.user_id == user_id,
         PostDB.id == id).update(updated_post.model_dump())
@@ -136,7 +136,7 @@ def delete_post(user_id: str, db: Session = Depends(get_db)):
     return {"message": "Deleted Post"}
 
 #delete specific post by id & user id
-@app.delete("/api/delete-specific-post/{user_id}/{id}", status_code=status.HTTP_200_OK)
+@app.delete("/api/delete-specific-post/user/{user_id}/{id}", status_code=status.HTTP_200_OK)
 def delete_specific_post(user_id: str, id:int, db: Session = Depends(get_db)):
     post = db.query(PostDB).filter(
         PostDB.user_id == user_id,
@@ -149,4 +149,63 @@ def delete_specific_post(user_id: str, id:int, db: Session = Depends(get_db)):
 
     return {"message": "Deleted Post"}
 
-#----------- Need to get posts by module aswell
+#------------- Posts Module Id based functions -------------#
+
+#get posts by its module id  
+@app.get("/api/post-by-module_id/{module_id}", response_model=list[UserPosts])
+def get_post(module_id: str, db: Session = Depends(get_db)):
+    post = db.query(PostDB).filter(PostDB.module_id == module_id).all()
+    if not post: 
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Posts not found for module id provided")
+    return post
+
+#update post by module id
+@app.put("/api/update-post-by-module-id/{module_id}", status_code=status.HTTP_200_OK)
+def update_post(module_id: str, updated_post: UpdatePost, db: Session = Depends(get_db)):
+    result = db.query(PostDB).filter(PostDB.module_id == module_id).update(updated_post.model_dump())
+    db.commit()
+
+    if not result:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="post not found")
+
+    return {"message": "Post updated successful"}
+
+#update specific post by module id & user id
+@app.put("/api/update-specific-post/module/{module_id}/{id}", status_code=status.HTTP_200_OK)
+def update_specific_module_post(module_id: str, id:int, updated_post: UpdatePost, db: Session = Depends(get_db)):
+    post = db.query(PostDB).filter(
+        PostDB.module_id == module_id,
+        PostDB.id == id).update(updated_post.model_dump())
+    db.commit()
+
+    if not post:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="post not found")
+
+    return {"message": "Post updated successful"}
+
+
+#delete post by module id
+@app.delete("/api/delete-post-by-module-id/{module_id}", status_code=status.HTTP_200_OK)
+def delete_post(module_id: str, db: Session = Depends(get_db)):
+    post = db.query(PostDB).filter(PostDB.module_id == module_id).first()
+    db.delete(post)
+    db.commit()
+
+    if not post:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found")
+
+    return {"message": "Deleted Post"}
+
+#delete specific post by id & module id
+@app.delete("/api/delete-specific-post/module/{module_id}/{id}", status_code=status.HTTP_200_OK)
+def delete_specific_post(module_id: str, id:int, db: Session = Depends(get_db)):
+    post = db.query(PostDB).filter(
+        PostDB.module_id == module_id,
+        PostDB.id == id).first()
+    db.delete(post)
+    db.commit()
+
+    if not post:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found")
+
+    return {"message": "Deleted Post"}

@@ -10,5 +10,5 @@ class PostDB(Base):
     post_title: Mapped[str] = mapped_column(String, nullable=False)
     content: Mapped[str] = mapped_column(String, nullable=False)
     user_id: Mapped[int] = mapped_column(Integer, nullable=False)# , unique=True). We will need to establish a foreign key relationship
-    
+    module_id: Mapped[int] = mapped_column(Integer, nullable=False)
     

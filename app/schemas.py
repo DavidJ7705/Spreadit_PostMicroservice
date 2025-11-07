@@ -11,17 +11,21 @@ class Post(BaseModel):
     post_title: TitleStr
     content: ContentStr
     user_id: int = Field(..., description="User ID is required")
+    module_id: int = Field(..., description="Module ID is required")
 
 class AddPost(BaseModel):
     post_title: TitleStr
     content: ContentStr
     user_id: int = Field(..., description="User ID is required")
+    module_id: int = Field(..., description="Module ID is required")
 
 class UserPosts(BaseModel):
     post_title: TitleStr
     content: ContentStr
-    user_id: int = Field(..., description="User ID is required")
+    module_id: int = Field(..., description="Module ID is required")
+    user_id: int = Field(..., description="User ID is required") # can comment out this line
 
 class UpdatePost(BaseModel):
     post_title: TitleStr
     content: ContentStr
+    module_id: int = Field(..., description="Module ID is required") # can comment out if needed
