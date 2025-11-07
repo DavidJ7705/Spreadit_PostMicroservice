@@ -97,5 +97,56 @@ def get_post(user_id: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Posts not found for user id provided")
     return post
 
+#update post by user id
+@app.put("/api/update-post-by-user-id/{user_id}", status_code=status.HTTP_200_OK)
+def update_post(user_id: str, updated_post: UpdatePost, db: Session = Depends(get_db)):
+    result = db.query(PostDB).filter(PostDB.user_id == user_id).update(updated_post.model_dump())
+    db.commit()
+
+    if not result:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="post not found")
+
+    return {"message": "Post updated successful"}
+
+#update specific post by post id & user id
+@app.put("/api/update-specific-post/{user_id}/{id}", status_code=status.HTTP_200_OK)
+def update_specific_post(user_id: str, id:int, updated_post: UpdatePost, db: Session = Depends(get_db)):
+    post = db.query(PostDB).filter(
+        PostDB.user_id == user_id,
+        PostDB.id == id).update(updated_post.model_dump())
+    db.commit()
+
+    if not post:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="post not found")
+
+    return {"message": "Post updated successful"}
+
+
+
+#delete post by user id
+@app.delete("/api/delete-post-by-user-id/{user_id}", status_code=status.HTTP_200_OK)
+def delete_post(user_id: str, db: Session = Depends(get_db)):
+    post = db.query(PostDB).filter(PostDB.user_id == user_id).first()
+    db.delete(post)
+    db.commit()
+
+    if not post:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found")
+
+    return {"message": "Deleted Post"}
+
+#delete specific post by id & user id
+@app.delete("/api/delete-specific-post/{user_id}/{id}", status_code=status.HTTP_200_OK)
+def delete_specific_post(user_id: str, id:int, db: Session = Depends(get_db)):
+    post = db.query(PostDB).filter(
+        PostDB.user_id == user_id,
+        PostDB.id == id).first()
+    db.delete(post)
+    db.commit()
+
+    if not post:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found")
+
+    return {"message": "Deleted Post"}
 
 #----------- Need to get posts by module aswell
