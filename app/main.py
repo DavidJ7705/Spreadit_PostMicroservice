@@ -226,3 +226,18 @@ def like_post(payload: AddLike, db: Session = Depends(get_db)):
 
     commit_or_rollback(db, "Post could not be Liked")
     return like
+
+#Remove like to a post as a user
+@app.delete("/api/remove-like/{user_id}/{id}", status_code=status.HTTP_200_OK)
+def remove_like(user_id: int, id:int, db: Session = Depends(get_db)):
+    like = db.query(LikeDB).filter(
+        LikeDB.user_id == user_id,
+        LikeDB.id == id,
+        ).first()
+    db.delete(like)
+    db.commit()
+
+    if not like:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found")
+
+    return {"message": "removed like"}
