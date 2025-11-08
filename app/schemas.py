@@ -48,6 +48,16 @@ class AddLike(BaseModel):
     user_id: UserInt
     post_id: int
 
-
+#maybe add liking comments once its done
 
 #-------- Comments --------#
+class Comment(BaseModel):
+    id: int
+    user_id: UserInt
+    post_id: int
+    content: ContentStr
+
+class AddComment(BaseModel):
+    user_id: UserInt
+    post_id: int
+    content: ContentStr

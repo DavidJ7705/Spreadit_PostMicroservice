@@ -12,6 +12,7 @@ class PostDB(Base):
     user_id: Mapped[int] = mapped_column(Integer, nullable=False)# , unique=True). We will need to establish a foreign key relationship
     module_id: Mapped[int] = mapped_column(Integer, nullable=False)
     likes: Mapped[list["LikeDB"]] = relationship(back_populates="post", cascade="all, delete-orphan", foreign_keys="LikeDB.post_id")
+    comments: Mapped[list["CommentDB"]] = relationship(back_populates="post", cascade="all, delete-orphan", foreign_keys="CommentDB.post_id")
 
     
 class LikeDB(Base):
@@ -20,7 +21,14 @@ class LikeDB(Base):
     user_id: Mapped[int] = mapped_column(Integer ,nullable=False)# when users table is linked change from post to that
     post_id: Mapped[int] = mapped_column(Integer, ForeignKey("post.id", ondelete="CASCADE"), nullable=False)
     post: Mapped["PostDB"] = relationship(back_populates="likes", foreign_keys=[post_id])
-
     __table_args__ = (UniqueConstraint("user_id", "post_id", name="unique_user_post_like"),)
+
+class CommentDB(Base):
+    __tablename__ = "comments"
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    user_id: Mapped[int] = mapped_column(Integer ,nullable=False)# when users table is linked change from post to that
+    post_id: Mapped[int] = mapped_column(Integer, ForeignKey("post.id", ondelete="CASCADE"), nullable=False)
+    content: Mapped[str] = mapped_column(String, nullable=False)
+    post: Mapped["PostDB"] = relationship(back_populates="comments", foreign_keys=[post_id])
 
     

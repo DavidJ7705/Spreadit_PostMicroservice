@@ -3,13 +3,13 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Depends, HTTPException, status, Response
 from fastapi.middleware.cors import CORSMiddleware
 from app.database import engine
-from app.models import Base, PostDB, LikeDB
+from app.models import Base, PostDB, LikeDB, CommentDB
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, selectinload
 
 from .database import engine, SessionLocal
-from .schemas import Post, AddPost, UpdatePost, UserPosts, Like, AddLike
+from .schemas import Post, AddPost, UpdatePost, UserPosts, Like, AddLike, Comment, AddComment
 
 #Replacing @app.on_event("startup")
 @asynccontextmanager
@@ -241,3 +241,64 @@ def remove_like(user_id: int, id:int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found")
 
     return {"message": "removed like"}
+
+#------------- Comments -------------#
+#get all comments
+@app.get("/api/get-all-comments", response_model=list[Comment])
+def get_comments(db: Session = Depends(get_db)):
+    stmt = select(CommentDB).order_by(CommentDB.id)
+    return list(db.execute(stmt).scalars())
+
+#get all comments under a specific post
+@app.get("/api/comments-by-post/{post_id}", response_model=list[Comment])
+def get_comments_by_post(post_id: str, db: Session = Depends(get_db)):
+    comments = db.query(CommentDB).filter(CommentDB.post_id == post_id).all()
+    if not comments: 
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found") #if not found return 404
+    return comments
+
+#get all comments by a user
+@app.get("/api/comments-by-user/{user_id}", response_model=list[Comment])
+def get_comments_by_user(user_id: str, db: Session = Depends(get_db)):
+    comments = db.query(CommentDB).filter(CommentDB.user_id == user_id).all()
+    if not comments: 
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found") #if not found return 404
+    return comments
+
+#Add Comment to a post
+@app.post("/api/add-comment", response_model=AddComment, status_code=status.HTTP_201_CREATED)
+def add_comment(payload: AddComment, db: Session = Depends(get_db)):
+    comment = CommentDB(**payload.model_dump())
+    db.add(comment)
+
+    commit_or_rollback(db, "Could not comment ")
+    return comment
+
+#Remove comment to a post as a user
+@app.delete("/api/remove-comment/{id}", status_code=status.HTTP_200_OK)
+def remove_comment(id:int, db: Session = Depends(get_db)):
+    comment = db.query(CommentDB).filter(
+        CommentDB.id == id,
+        ).first()
+    db.delete(comment)
+    db.commit()
+
+    if not comment:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Comment not found")
+
+    return {"message": "removed comment"}
+
+
+@app.put("/api/comments/{id}", status_code=status.HTTP_200_OK)
+def update_comment(id: int, payload: AddComment, db: Session = Depends(get_db)):
+    """Update a comment's content"""
+    comment = db.get(CommentDB, id)
+    if not comment:
+        raise HTTPException(status_code=404, detail="Comment not found")
+
+    # Allow updating only the content (and optionally user_id/post_id if needed)
+    for key, value in payload.model_dump().items():
+        setattr(comment, key, value)
+    db.commit()
+    db.refresh(comment)
+    return {"message": "Comment updated successfully"}
