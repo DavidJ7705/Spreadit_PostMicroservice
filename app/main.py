@@ -19,6 +19,14 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
+# CORS (add this block)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],   # dev-friendly; tighten in prod
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 def get_db():
     db = SessionLocal()
     try:
