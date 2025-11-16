@@ -19,6 +19,7 @@ class Post(BaseModel):
     content: ContentStr
     user_id: UserInt = Field(..., description="User ID is required")
     module_id: int = Field(..., description="Module ID is required")
+    model_config = ConfigDict(from_attributes=True)
 
 class AddPost(BaseModel):
     post_title: TitleStr
@@ -31,6 +32,7 @@ class UserPosts(BaseModel):
     content: ContentStr
     module_id: ModuleInt = Field(..., description="Module ID is required")
     user_id: UserInt = Field(..., description="User ID is required") # can comment out this line
+    model_config = ConfigDict(from_attributes=True)
 
 class UpdatePost(BaseModel):
     post_title: TitleStr
@@ -43,6 +45,7 @@ class Like(BaseModel):
     id: int
     user_id: UserInt
     post_id: int
+    model_config = ConfigDict(from_attributes=True)
 
 class AddLike(BaseModel):
     user_id: UserInt
@@ -56,8 +59,12 @@ class Comment(BaseModel):
     user_id: UserInt
     post_id: int
     content: ContentStr
+    model_config = ConfigDict(from_attributes=True)
 
 class AddComment(BaseModel):
     user_id: UserInt
     post_id: int
+    content: ContentStr
+
+class UpdateComment(BaseModel):
     content: ContentStr

@@ -9,7 +9,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, selectinload
 
 from .database import engine, SessionLocal
-from .schemas import Post, AddPost, UpdatePost, UserPosts, Like, AddLike, Comment, AddComment
+from .schemas import Post, AddPost, UpdatePost, UserPosts, Like, AddLike, Comment, AddComment, UpdateComment
 
 #Replacing @app.on_event("startup")
 @asynccontextmanager
@@ -124,87 +124,120 @@ def get_post(module_id: int, db: Session = Depends(get_db)):
     return posts
 
 #------------- Likes -------------#
-#using like table in db to get all likes
-@app.get("/api/get-all-likes", response_model=list[Like])
-def get_likes(db: Session = Depends(get_db)):
+
+@app.get("/api/likes", response_model=list[Like])
+def get_all_likes(db: Session = Depends(get_db)):
     stmt = select(LikeDB).order_by(LikeDB.id)
     return list(db.execute(stmt).scalars())
 
-#Add like to a post as a user
-@app.post("/api/add-like/", response_model=Like, status_code=status.HTTP_201_CREATED)
-def like_post(payload: AddLike, db: Session = Depends(get_db)):
+
+@app.post("/api/likes", response_model=Like, status_code=status.HTTP_201_CREATED)
+def add_like(payload: AddLike, db: Session = Depends(get_db)):
+
     like = LikeDB(**payload.model_dump())
     db.add(like)
-    commit_or_rollback(db, "Post could not be Liked")
+    commit_or_rollback(db, "User already liked this post")
+
     db.refresh(like)
     return like
 
-#Remove like to a post as a user
-@app.delete("/api/remove-like/{id}", status_code=status.HTTP_200_OK)
-def remove_like(id:int, db: Session = Depends(get_db)):
-    like = db.get(LikeDB, id)
+
+@app.delete("/api/likes", status_code=status.HTTP_200_OK)
+def remove_like(user_id: int, post_id: int, db: Session = Depends(get_db)):
+
+    like = (
+        db.query(LikeDB)
+        .filter(LikeDB.user_id == user_id, LikeDB.post_id == post_id)
+        .first()
+    )
+
     if not like:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Like not Found")
+        raise HTTPException(status_code=404, detail="Like not found")
 
     db.delete(like)
-    commit_or_rollback(db, "Could not Remove Like")
-    db.refresh(like)
-    return {"message": "removed like"}
+    commit_or_rollback(db, "Failed to remove like")
+
+    return {"message": "Like removed successfully"}
+
+
 
 #------------- Comments -------------#
-#get all comments
-@app.get("/api/get-all-comments", response_model=list[Comment])
-def get_comments(db: Session = Depends(get_db)):
+
+# Get all comments
+@app.get("/api/comments", response_model=list[Comment])
+def get_all_comments(db: Session = Depends(get_db)):
     stmt = select(CommentDB).order_by(CommentDB.id)
     return list(db.execute(stmt).scalars())
 
-#get all comments under a specific post
-@app.get("/api/comments-by-post/{post_id}", response_model=list[Comment])
-def get_comments_by_post(post_id: int, db: Session = Depends(get_db)):
-    comments = db.query(CommentDB).filter(CommentDB.post_id == post_id).all()
-    if not comments: 
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No comments ffor this post") #if not found return 404
+
+# Get comments for a post
+@app.get("/api/comments/{post_id}", response_model=list[Comment])
+def get_comments_for_post(post_id: int, db: Session = Depends(get_db)):
+    comments = (
+        db.query(CommentDB)
+        .filter(CommentDB.post_id == post_id)
+        .order_by(CommentDB.id)
+        .all()
+    )
+
+    if not comments:
+        raise HTTPException(404, "No comments found for this post")
+
     return comments
 
-#get all comments by a user
-@app.get("/api/comments-by-user/{user_id}", response_model=list[Comment])
-def get_comments_by_user(user_id: int, db: Session = Depends(get_db)):
-    comments = db.query(CommentDB).filter(CommentDB.user_id == user_id).all()
-    if not comments: 
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No comments for this user") #if not found return 404
-    return comments
 
-#Add Comment to a post
-@app.post("/api/add-comment", response_model=AddComment, status_code=status.HTTP_201_CREATED)
+# Get comments by a user
+@app.get("/api/comments/{user_id}", response_model=list[Comment])
+def get_comments_for_user(user_id: int, db: Session = Depends(get_db)):
+    comments = (
+        db.query(CommentDB)
+        .filter(CommentDB.user_id == user_id)
+        .order_by(CommentDB.id)
+        .all()
+    )
+
+    if not comments:
+        raise HTTPException(404, "No comments found for this user")
+
+    return commentsa
+
+
+
+# Add a comment
+@app.post("/api/comments", response_model=AddComment, status_code=201)
 def add_comment(payload: AddComment, db: Session = Depends(get_db)):
     comment = CommentDB(**payload.model_dump())
     db.add(comment)
-    commit_or_rollback(db, "Could not comment on post")
+
+    commit_or_rollback(db, "Comment could not be created")
     db.refresh(comment)
     return comment
 
-#Remove comment to a post as a user
-@app.delete("/api/remove-comment/{id}", status_code=status.HTTP_200_OK)
-def remove_comment(id:int, db: Session = Depends(get_db)):
-    comment = db.get(CommentDB, id)
+
+# Update a comment (just content)
+@app.put("/api/comments/{comment_id}", status_code=200)
+def update_comment(comment_id: int, payload: UpdateComment, db: Session = Depends(get_db)):
+    comment = db.get(CommentDB, comment_id)
+
     if not comment:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Comment not found")
-    db.delete(comment)
-    commit_or_rollback(db, "Could not remove comment on post")
-
-    return {"message": "removed comment"}
-
-
-@app.put("/api/comments/{id}", status_code=status.HTTP_200_OK)
-def update_comment(id: int, payload: AddComment, db: Session = Depends(get_db)):
-    """Update a comment's content"""
-    comment = db.get(CommentDB, id)
-    if not comment:
-        raise HTTPException(status_code=404, detail="Comment not found")
+        raise HTTPException(404, "Comment not found")
 
     for key, value in payload.model_dump().items():
         setattr(comment, key, value)
-    commit_or_rollback(db, "Could not update comment on post")
-    db.refresh(comment)
 
+    commit_or_rollback(db, "Failed updating comment")
+    db.refresh(comment)
     return {"message": "Comment updated successfully"}
+
+
+# Delete a comment
+@app.delete("/api/comments/{comment_id}", status_code=200)
+def delete_comment(comment_id: int, db: Session = Depends(get_db)):
+    comment = db.get(CommentDB, comment_id)
+    if not comment:
+        raise HTTPException(404, "Comment not found")
+
+    db.delete(comment)
+    commit_or_rollback(db, "Failed deleting comment")
+
+    return {"message": "Comment deleted successfully"}
