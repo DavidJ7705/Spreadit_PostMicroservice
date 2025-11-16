@@ -11,24 +11,48 @@ class PostDB(Base):
     content: Mapped[str] = mapped_column(String, nullable=False)
     user_id: Mapped[int] = mapped_column(Integer, nullable=False)# , unique=True). We will need to establish a foreign key relationship
     module_id: Mapped[int] = mapped_column(Integer, nullable=False)
-    likes: Mapped[list["LikeDB"]] = relationship(back_populates="post", cascade="all, delete-orphan", foreign_keys="LikeDB.post_id")
-    comments: Mapped[list["CommentDB"]] = relationship(back_populates="post", cascade="all, delete-orphan", foreign_keys="CommentDB.post_id")
+    likes: Mapped[list["LikeDB"]] = relationship(
+        "LikeDB",
+        back_populates="post",
+        cascade="all, delete-orphan",
+    )
+    comments: Mapped[list["CommentDB"]] = relationship(
+        "CommentDB",
+        back_populates="post",
+        cascade="all, delete-orphan",
+    )
 
     
 class LikeDB(Base):
     __tablename__ = "likes"
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     user_id: Mapped[int] = mapped_column(Integer ,nullable=False)# when users table is linked change from post to that
-    post_id: Mapped[int] = mapped_column(Integer, ForeignKey("post.id", ondelete="CASCADE"), nullable=False)
-    post: Mapped["PostDB"] = relationship(back_populates="likes", foreign_keys=[post_id])
+    post_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("post.id", ondelete="CASCADE"),
+        index=True,
+        nullable=False
+    )
+    post: Mapped["PostDB"] = relationship(
+        "PostDB",
+        back_populates="likes"
+    )
     __table_args__ = (UniqueConstraint("user_id", "post_id", name="unique_user_post_like"),)
 
 class CommentDB(Base):
     __tablename__ = "comments"
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
     user_id: Mapped[int] = mapped_column(Integer ,nullable=False)# when users table is linked change from post to that
-    post_id: Mapped[int] = mapped_column(Integer, ForeignKey("post.id", ondelete="CASCADE"), nullable=False)
+    post_id: Mapped[int] = mapped_column(
+        Integer,
+        ForeignKey("post.id", ondelete="CASCADE"),
+        index=True,
+        nullable=False
+    )
     content: Mapped[str] = mapped_column(String, nullable=False)
-    post: Mapped["PostDB"] = relationship(back_populates="comments", foreign_keys=[post_id])
+    post: Mapped["PostDB"] = relationship(
+         "PostDB",
+         back_populates="comments"
+    )
 
     
