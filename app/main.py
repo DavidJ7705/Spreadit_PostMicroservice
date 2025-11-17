@@ -58,7 +58,7 @@ def add_post(payload: AddPost, db: Session = Depends(get_db)):
     return post
 
 #using db to get all posts
-@app.get("/api/get-all-posts", response_model=list[Post])
+@app.get("/api/get-all-posts", response_model=list[Post], status_code=status.HTTP_200_OK)
 def get_all_posts(db: Session = Depends(get_db)):
     stmt = select(PostDB).order_by(PostDB.id)
     return list(db.execute(stmt).scalars())
@@ -66,7 +66,7 @@ def get_all_posts(db: Session = Depends(get_db)):
 
 #------------- Posts Backend Id based functions -------------#
 #get post by its backend id  
-@app.get("/api/post-by-id/{id}", response_model=Post)
+@app.get("/api/post-by-id/{id}", response_model=Post, status_code=status.HTTP_200_OK)
 def get_post(id: int, db: Session = Depends(get_db)):
     post = db.get(PostDB, id)
     if not post: 
@@ -89,7 +89,7 @@ def update_post(id: int, payload: UpdatePost, db: Session = Depends(get_db)):
     return {"message": "Post updated successful"}
     
 #delete post by backend id
-@app.delete("/api/delete-post-by-id/{id}", status_code=status.HTTP_200_OK)
+@app.delete("/api/delete-post-by-id/{id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_post(id: int, db: Session = Depends(get_db)):
     post = db.get(PostDB, id)
     if not post:
@@ -97,13 +97,12 @@ def delete_post(id: int, db: Session = Depends(get_db)):
 
     db.delete(post)
     db.commit()
-
-    return {"message": "Deleted Post"}
+    return Response(status_code = status.HTTP_204_NO_CONTENT)
 
 #------------- Posts by User -------------#
 
 #get posts by its user id  
-@app.get("/api/post-by-user_id/{user_id}", response_model=list[UserPosts])
+@app.get("/api/post-by-user_id/{user_id}", response_model=list[UserPosts], status_code=status.HTTP_200_OK)
 def get_post(user_id: int, db: Session = Depends(get_db)):
     posts = db.query(PostDB).filter(PostDB.user_id == user_id).all()
     if not posts: 
@@ -114,7 +113,7 @@ def get_post(user_id: int, db: Session = Depends(get_db)):
 #------------- Posts by Module -------------#
 
 #get posts by its module id  
-@app.get("/api/post-by-module_id/{module_id}", response_model=list[UserPosts])
+@app.get("/api/post-by-module_id/{module_id}", response_model=list[UserPosts], status_code=status.HTTP_200_OK)
 def get_post(module_id: int, db: Session = Depends(get_db)):
     posts = db.query(PostDB).filter(PostDB.module_id == module_id).all()
     if not posts: 
@@ -123,7 +122,7 @@ def get_post(module_id: int, db: Session = Depends(get_db)):
 
 #------------- Likes -------------#
 
-@app.get("/api/likes", response_model=list[Like])
+@app.get("/api/likes", response_model=list[Like], status_code=status.HTTP_200_OK)
 def get_all_likes(db: Session = Depends(get_db)):
     stmt = select(LikeDB).order_by(LikeDB.id)
     return list(db.execute(stmt).scalars())
@@ -162,14 +161,14 @@ def remove_like(user_id: int, post_id: int, db: Session = Depends(get_db)):
 #------------- Comments -------------#
 
 # Get all comments
-@app.get("/api/comments", response_model=list[Comment])
+@app.get("/api/comments", response_model=list[Comment], status_code=status.HTTP_200_OK)
 def get_all_comments(db: Session = Depends(get_db)):
     stmt = select(CommentDB).order_by(CommentDB.id)
     return list(db.execute(stmt).scalars())
 
 
 # Get comments for a post
-@app.get("/api/comments/{post_id}", response_model=list[Comment])
+@app.get("/api/comments/{post_id}", response_model=list[Comment], status_code=status.HTTP_200_OK)
 def get_comments_for_post(post_id: int, db: Session = Depends(get_db)):
     comments = (
         db.query(CommentDB)
@@ -185,7 +184,7 @@ def get_comments_for_post(post_id: int, db: Session = Depends(get_db)):
 
 
 # Get comments by a user
-@app.get("/api/comments-by-user/{user_id}", response_model=list[Comment])
+@app.get("/api/comments-by-user/{user_id}", response_model=list[Comment], status_code=status.HTTP_200_OK)
 def get_comments_for_user(user_id: int, db: Session = Depends(get_db)):
     comments = (
         db.query(CommentDB)
@@ -202,7 +201,7 @@ def get_comments_for_user(user_id: int, db: Session = Depends(get_db)):
 
 
 # Add a comment
-@app.post("/api/comments", response_model=Comment, status_code=201)
+@app.post("/api/comments", response_model=Comment, status_code=status.HTTP_201_CREATED)
 def add_comment(payload: AddComment, db: Session = Depends(get_db)):
     comment = CommentDB(**payload.model_dump())
     db.add(comment)
@@ -213,7 +212,7 @@ def add_comment(payload: AddComment, db: Session = Depends(get_db)):
 
 
 # Update a comment (just content)
-@app.put("/api/comments/{comment_id}", status_code=200)
+@app.put("/api/comments/{comment_id}", status_code=status.HTTP_200_OK)
 def update_comment(comment_id: int, payload: UpdateComment, db: Session = Depends(get_db)):
     comment = db.get(CommentDB, comment_id)
 
@@ -229,7 +228,7 @@ def update_comment(comment_id: int, payload: UpdateComment, db: Session = Depend
 
 
 # Delete a comment
-@app.delete("/api/comments/{comment_id}", status_code=200)
+@app.delete("/api/comments/{comment_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_comment(comment_id: int, db: Session = Depends(get_db)):
     comment = db.get(CommentDB, comment_id)
     if not comment:
@@ -238,4 +237,4 @@ def delete_comment(comment_id: int, db: Session = Depends(get_db)):
     db.delete(comment)
     commit_or_rollback(db, "Failed deleting comment")
 
-    return {"message": "Comment deleted successfully"}
+    return Response(status_code=status.HTTP_204_NO_CONTENT)

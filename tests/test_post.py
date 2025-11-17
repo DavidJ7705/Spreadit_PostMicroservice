@@ -72,8 +72,8 @@ def test_update_post_not_found(client):
 def test_delete_post_ok(client):
     client.post("/api/add-post", json = add_post_payload())
     r = client.delete("/api/delete-post-by-id/1")
-    assert r.status_code == 200
-    assert r.json() == {"message": "Deleted Post"}
+    assert r.status_code == 204
+
 
 def test_delete_post_not_found(client):
     client.post("/api/add-post", json = add_post_payload())
@@ -112,6 +112,7 @@ def test_add_like_ok(client):
     assert r.json() == get_likes_payload()
 
 def test_add_like_not_ok(client):
+    client.post("/api/add-post", json = add_post_payload())
     client.post("/api/likes", json = add_like_payload())
     r = client.post("/api/likes", json = add_like_payload())
     assert r.status_code == 409
@@ -181,9 +182,10 @@ def test_get_comments_for_post_not_found(client):
 def test_get_comments_for_user_ok(client):
     client.post("/api/add-post", json = add_post_payload())
     client.post("/api/comments", json = add_comment_payload())
-    r = client.get("/api/comments/1")
+    r = client.get("/api/comments-by-user/1")
     assert r.status_code == 200
     assert r.json() == [get_comment_payload()]
+
 
 def test_get_comments_for_user_not_found(client):
     r = client.get("/api/comments-by-user/1")
@@ -206,8 +208,7 @@ def test_delete_comment_ok(client):
     client.post("/api/add-post", json = add_post_payload())
     client.post("/api/comments", json = add_comment_payload())
     r = client.delete("/api/comments/1")
-    assert r.status_code == 200
-    assert r.json() == {"message": "Comment deleted successfully"}
+    assert r.status_code == 204
 
 def test_delete_comment_not_found(client):
     r = client.delete("/api/comments/1")
