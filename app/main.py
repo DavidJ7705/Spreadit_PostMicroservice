@@ -48,7 +48,7 @@ def health():
 
 #------------- No Id functions -------------#
 #Add Post
-@app.post("/api/add-post", response_model=AddPost, status_code=status.HTTP_201_CREATED)
+@app.post("/api/add-post", response_model=Post, status_code=status.HTTP_201_CREATED)
 def add_post(payload: AddPost, db: Session = Depends(get_db)):
     post = PostDB(**payload.model_dump())
     db.add(post)
@@ -92,13 +92,11 @@ def update_post(id: int, payload: UpdatePost, db: Session = Depends(get_db)):
 @app.delete("/api/delete-post-by-id/{id}", status_code=status.HTTP_200_OK)
 def delete_post(id: int, db: Session = Depends(get_db)):
     post = db.get(PostDB, id)
-    if not post: 
+    if not post:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found") #if not found return 404
-   
+
     db.delete(post)
     db.commit()
-    db.refresh(post)
-
 
     return {"message": "Deleted Post"}
 
@@ -187,7 +185,7 @@ def get_comments_for_post(post_id: int, db: Session = Depends(get_db)):
 
 
 # Get comments by a user
-@app.get("/api/comments/{user_id}", response_model=list[Comment])
+@app.get("/api/comments-by-user/{user_id}", response_model=list[Comment])
 def get_comments_for_user(user_id: int, db: Session = Depends(get_db)):
     comments = (
         db.query(CommentDB)
@@ -199,12 +197,12 @@ def get_comments_for_user(user_id: int, db: Session = Depends(get_db)):
     if not comments:
         raise HTTPException(404, "No comments found for this user")
 
-    return commentsa
+    return comments
 
 
 
 # Add a comment
-@app.post("/api/comments", response_model=AddComment, status_code=201)
+@app.post("/api/comments", response_model=Comment, status_code=201)
 def add_comment(payload: AddComment, db: Session = Depends(get_db)):
     comment = CommentDB(**payload.model_dump())
     db.add(comment)
