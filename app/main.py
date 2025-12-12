@@ -7,6 +7,7 @@ from app.models import Base, PostDB, LikeDB, CommentDB
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, selectinload
+from .schemas import Post, AddPost, UpdatePost, Comment, AddComment, UpdateComment, UserPosts, Like, AddLike
 
 import os
 import aio_pika
@@ -30,6 +31,7 @@ async def publish_event(routing_key: str, data: dict):
                 content_type="application/json"
             )
             await exchange.publish(message, routing_key=routing_key)
+    except Exception as e:
         print(f"Failed to publish event {routing_key}: {e}")
 
 async def process_user_deleted(data: dict):
