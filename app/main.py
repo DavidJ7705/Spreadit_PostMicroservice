@@ -2,7 +2,7 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Depends, HTTPException, status, Response
 from fastapi.middleware.cors import CORSMiddleware
-from app.database import engine
+from app.database import engine, SessionLocal
 from app.models import Base, PostDB, LikeDB, CommentDB
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
@@ -173,7 +173,7 @@ async def add_post(payload: AddPost, db: Session = Depends(get_db)):
 #using db to get all posts
 @app.get("/api/get-all-posts", response_model=list[Post], status_code=status.HTTP_200_OK)
 def get_all_posts(db: Session = Depends(get_db)):
-    stmt = select(PostDB).order_by(PostDB.id)
+    stmt = select(PostDB).options(selectinload(PostDB.likes), selectinload(PostDB.comments)).order_by(PostDB.id)
     return list(db.execute(stmt).scalars())
 
 
@@ -181,7 +181,9 @@ def get_all_posts(db: Session = Depends(get_db)):
 #get post by its backend id  
 @app.get("/api/post-by-id/{id}", response_model=Post, status_code=status.HTTP_200_OK)
 def get_post(id: int, db: Session = Depends(get_db)):
-    post = db.get(PostDB, id)
+    stmt = select(PostDB).options(selectinload(PostDB.likes), selectinload(PostDB.comments)).where(PostDB.id == id)
+    post = db.execute(stmt).scalar_one_or_none()
+    
     if not post: 
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Post not found") #if not found return 404
     return post
