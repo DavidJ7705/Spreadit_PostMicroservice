@@ -224,9 +224,7 @@ async def delete_post(id: int, db: Session = Depends(get_db)):
 def get_posts_by_user(user_id: str, db: Session = Depends(get_db)):
     posts = db.query(PostDB).filter(PostDB.user_id == user_id).all()
     if not posts: 
-        # For a user with no posts, returning empty list is often better than 404, but sticking to existing logic
-        # raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Posts not found for user provided")
-        return []
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Posts not found for user provided")
     
     return posts
 
@@ -302,8 +300,7 @@ def get_comments_for_post(post_id: int, db: Session = Depends(get_db)):
     )
 
     if not comments:
-        # Returning empty list is better than 404 for frontend lists
-        return []
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No comments found for this post")
 
     return comments
 
@@ -319,7 +316,7 @@ def get_comments_for_user(user_id: str, db: Session = Depends(get_db)):
     )
 
     if not comments:
-         return []
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="No comments found for this user")
 
     return comments
 
