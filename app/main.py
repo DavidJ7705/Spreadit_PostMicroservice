@@ -221,10 +221,12 @@ async def delete_post(id: int, db: Session = Depends(get_db)):
 
 #get posts by its user id  
 @app.get("/api/post-by-user_id/{user_id}", response_model=list[UserPosts], status_code=status.HTTP_200_OK)
-def get_post(user_id: int, db: Session = Depends(get_db)):
+def get_posts_by_user(user_id: str, db: Session = Depends(get_db)):
     posts = db.query(PostDB).filter(PostDB.user_id == user_id).all()
     if not posts: 
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Posts not found for user provided")
+        # For a user with no posts, returning empty list is often better than 404, but sticking to existing logic
+        # raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Posts not found for user provided")
+        return []
     
     return posts
 
@@ -232,9 +234,10 @@ def get_post(user_id: int, db: Session = Depends(get_db)):
 
 #get posts by its module id  
 @app.get("/api/post-by-module_id/{module_id}", response_model=list[UserPosts], status_code=status.HTTP_200_OK)
-def get_post(module_id: int, db: Session = Depends(get_db)):
+def get_posts_by_module(module_id: int, db: Session = Depends(get_db)):
     posts = db.query(PostDB).filter(PostDB.module_id == module_id).all()
     if not posts: 
+         # Stick to list return logic if preferred, or keep 404
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Posts not found for module id provided")
     return posts
 
@@ -259,7 +262,7 @@ async def add_like(payload: AddLike, db: Session = Depends(get_db)):
 
 
 @app.delete("/api/likes", status_code=status.HTTP_200_OK)
-async def remove_like(user_id: int, post_id: int, db: Session = Depends(get_db)):
+async def remove_like(user_id: str, post_id: int, db: Session = Depends(get_db)):
 
     like = (
         db.query(LikeDB)
@@ -299,14 +302,15 @@ def get_comments_for_post(post_id: int, db: Session = Depends(get_db)):
     )
 
     if not comments:
-        raise HTTPException(404, "No comments found for this post")
+        # Returning empty list is better than 404 for frontend lists
+        return []
 
     return comments
 
 
 # Get comments by a user
 @app.get("/api/comments-by-user/{user_id}", response_model=list[Comment], status_code=status.HTTP_200_OK)
-def get_comments_for_user(user_id: int, db: Session = Depends(get_db)):
+def get_comments_for_user(user_id: str, db: Session = Depends(get_db)):
     comments = (
         db.query(CommentDB)
         .filter(CommentDB.user_id == user_id)
@@ -315,7 +319,7 @@ def get_comments_for_user(user_id: int, db: Session = Depends(get_db)):
     )
 
     if not comments:
-        raise HTTPException(404, "No comments found for this user")
+         return []
 
     return comments
 
