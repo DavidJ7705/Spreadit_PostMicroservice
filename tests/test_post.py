@@ -1,22 +1,22 @@
-def add_post_payload(post_title = "New Post", content = "new post content", user_id = 1, module_id = 1):
+def add_post_payload(post_title = "New Post", content = "new post content", user_id = "1", module_id = 1):
     return {"post_title": post_title, "content": content, "user_id": user_id, "module_id": module_id}
 
-def post_payload(post_title = "New Post", content = "new post content", user_id = 1, module_id = 1, id = 1):
+def post_payload(post_title = "New Post", content = "new post content", user_id = "1", module_id = 1, id = 1):
     return {"post_title": post_title, "content": content, "user_id": user_id, "module_id": module_id, "id": id, "likes": [], "comments": []}
 
-def user_posts_payload(post_title = "New Post", content = "new post content", user_id = 1, module_id = 1, id = 1):
+def user_posts_payload(post_title = "New Post", content = "new post content", user_id = "1", module_id = 1, id = 1):
     return {"post_title": post_title, "content": content, "user_id": user_id, "module_id": module_id, "id": id}
 
-def add_like_payload(user_id = 1, post_id = 1):
+def add_like_payload(user_id = "1", post_id = 1):
     return {"user_id": user_id, "post_id": post_id}
 
-def get_likes_payload(user_id = 1, post_id = 1, id = 1):
+def get_likes_payload(user_id = "1", post_id = 1, id = 1):
     return {"user_id": user_id, "post_id": post_id, "id": id}
 
-def add_comment_payload(user_id = 1, post_id = 1, content = "Great post!"):
+def add_comment_payload(user_id = "1", post_id = 1, content = "Great post!"):
     return {"user_id": user_id, "post_id": post_id, "content": content}
 
-def get_comment_payload(user_id = 1, post_id = 1, content = "Great post!", id = 1):
+def get_comment_payload(user_id = "1", post_id = 1, content = "Great post!", id = 1):
     return {"user_id": user_id, "post_id": post_id, "content": content, "id": id}
 
 ############################################################################################################################
@@ -111,7 +111,7 @@ def test_add_like_ok(client):
     assert r.status_code == 201
     response_data = r.json()
     assert response_data["id"] == 1
-    assert response_data["user_id"] == 1
+    assert response_data["user_id"] == "1"
     assert response_data["post_id"] == 1
     assert "created_at" in response_data
 
@@ -130,7 +130,7 @@ def test_get_all_likes_ok(client):
     response_data = r.json()
     assert len(response_data) == 1
     assert response_data[0]["id"] == 1
-    assert response_data[0]["user_id"] == 1
+    assert response_data[0]["user_id"] == "1"
     assert response_data[0]["post_id"] == 1
     assert "created_at" in response_data[0]
 
@@ -142,12 +142,12 @@ def test_get_all_likes_empty(client):
 def test_remove_like_ok(client):
     client.post("/api/add-post", json = add_post_payload())
     client.post("/api/likes", json = add_like_payload())
-    r = client.delete("/api/likes", params = {"user_id": 1, "post_id": 1})
+    r = client.delete("/api/likes", params = {"user_id": "1", "post_id": 1})
     assert r.status_code == 200
     assert r.json() == {"message": "Like removed successfully"}
 
 def test_remove_like_not_found(client):
-    r = client.delete("/api/likes", params = {"user_id": 1, "post_id": 1})
+    r = client.delete("/api/likes", params = {"user_id": "1", "post_id": 1})
     assert r.status_code == 404
     assert r.json() == {"detail": "Like not found"}
 
@@ -159,7 +159,7 @@ def test_add_comment_ok(client):
     assert r.status_code == 201
     response_data = r.json()
     assert response_data["id"] == 1
-    assert response_data["user_id"] == 1
+    assert response_data["user_id"] == "1"
     assert response_data["post_id"] == 1
     assert response_data["content"] == "Great post!"
     assert "created_at" in response_data
@@ -177,7 +177,7 @@ def test_get_all_comments_ok(client):
     response_data = r.json()
     assert len(response_data) == 1
     assert response_data[0]["id"] == 1
-    assert response_data[0]["user_id"] == 1
+    assert response_data[0]["user_id"] == "1"
     assert response_data[0]["post_id"] == 1
     assert response_data[0]["content"] == "Great post!"
     assert "created_at" in response_data[0]
@@ -195,7 +195,7 @@ def test_get_comments_for_post_ok(client):
     response_data = r.json()
     assert len(response_data) == 1
     assert response_data[0]["id"] == 1
-    assert response_data[0]["user_id"] == 1
+    assert response_data[0]["user_id"] == "1"
     assert response_data[0]["post_id"] == 1
     assert response_data[0]["content"] == "Great post!"
     assert "created_at" in response_data[0]
@@ -213,7 +213,7 @@ def test_get_comments_for_user_ok(client):
     response_data = r.json()
     assert len(response_data) == 1
     assert response_data[0]["id"] == 1
-    assert response_data[0]["user_id"] == 1
+    assert response_data[0]["user_id"] == "1"
     assert response_data[0]["post_id"] == 1
     assert response_data[0]["content"] == "Great post!"
     assert "created_at" in response_data[0]
@@ -318,9 +318,9 @@ def test_process_user_deleted_with_user_id(client):
 
     async def run_test():
         # Setup: Create a post, like, and comment for user_id=1
-        client.post("/api/add-post", json={"post_title": "Test Post", "content": "test content", "user_id": 1, "module_id": 1})
-        client.post("/api/likes", json={"user_id": 1, "post_id": 1})
-        client.post("/api/comments", json={"user_id": 1, "post_id": 1, "content": "Test comment"})
+        client.post("/api/add-post", json={"post_title": "Test Post", "content": "test content", "user_id": "1", "module_id": 1})
+        client.post("/api/likes", json={"user_id": "1", "post_id": 1})
+        client.post("/api/comments", json={"user_id": "1", "post_id": 1, "content": "Test comment"})
 
         # Verify data exists
         posts_before = client.get("/api/post-by-user_id/1")
@@ -329,7 +329,7 @@ def test_process_user_deleted_with_user_id(client):
 
         # Process user deletion with test database
         with patch('app.main.SessionLocal', TestingSessionLocal):
-            await process_user_deleted({"user_id": 1})
+            await process_user_deleted({"user_id": "1"})
 
         # Verify data is deleted
         posts_after = client.get("/api/post-by-user_id/1")
@@ -373,8 +373,8 @@ def test_process_module_deleted_with_module_id(client):
 
     async def run_test():
         # Setup: Create posts for module_id=1
-        client.post("/api/add-post", json={"post_title": "Test Post 1", "content": "test content", "user_id": 1, "module_id": 1})
-        client.post("/api/add-post", json={"post_title": "Test Post 2", "content": "test content", "user_id": 2, "module_id": 1})
+        client.post("/api/add-post", json={"post_title": "Test Post 1", "content": "test content", "user_id": "1", "module_id": 1})
+        client.post("/api/add-post", json={"post_title": "Test Post 2", "content": "test content", "user_id": "2", "module_id": 1})
 
         # Verify data exists
         posts_before = client.get("/api/post-by-module_id/1")
