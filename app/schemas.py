@@ -9,7 +9,7 @@ TitleStr = Annotated[str, StringConstraints(min_length=2, max_length=50)]
 ContentStr = Annotated[str, StringConstraints(min_length=0, max_length=2000)]
 
 #Int
-UserInt = Annotated[int, Ge(1)]
+UserInt = str
 ModuleInt = Annotated[int, Ge(1)]
 
 

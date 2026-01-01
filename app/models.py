@@ -10,7 +10,7 @@ class PostDB(Base):
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     post_title: Mapped[str] = mapped_column(String, nullable=False)
     content: Mapped[str] = mapped_column(String, nullable=False)
-    user_id: Mapped[int] = mapped_column(Integer, nullable=False)# , unique=True). We will need to establish a foreign key relationship
+    user_id: Mapped[str] = mapped_column(String, nullable=False)# , unique=True). We will need to establish a foreign key relationship
     module_id: Mapped[int] = mapped_column(Integer, nullable=False)
     likes: Mapped[list["LikeDB"]] = relationship(
         "LikeDB",
@@ -28,7 +28,7 @@ class PostDB(Base):
 class LikeDB(Base):
     __tablename__ = "likes"
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    user_id: Mapped[int] = mapped_column(Integer ,nullable=False)# when users table is linked change from post to that
+    user_id: Mapped[str] = mapped_column(String ,nullable=False)# when users table is linked change from post to that
     post_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("post.id", ondelete="CASCADE"),
@@ -45,7 +45,7 @@ class LikeDB(Base):
 class CommentDB(Base):
     __tablename__ = "comments"
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    user_id: Mapped[int] = mapped_column(Integer ,nullable=False)# when users table is linked change from post to that
+    user_id: Mapped[str] = mapped_column(String ,nullable=False)# when users table is linked change from post to that
     post_id: Mapped[int] = mapped_column(
         Integer,
         ForeignKey("post.id", ondelete="CASCADE"),
